@@ -92,7 +92,7 @@ impl Default for MyApp {
                 update_thread_spawned: false,
                 client: reqwest::blocking::Client::new(),
                 state: GameState::None,
-                server_url: "http://localhost:1111/".to_string(),
+                server_url: "http://upsilontest.ddns.net/".to_string(),
                 current_game_id: String::new(),
                 state_text: "Ready for new games".to_string(),
                 turn_type: -1,
@@ -136,11 +136,17 @@ impl MyApp {
                     .post(format!("{}join/random", data.server_url))
                     .send()
                     .and_then(|result| {
-                        Ok({
-                            data.current_game_id = result.text().unwrap();
-                            println!("Current game id {}", data.current_game_id);
-                            MyApp::check_if_joined(data);
-                        })
+                        if result.status() == 200 {
+                            Ok({
+                                data.current_game_id = result.text().unwrap();
+                                println!("Current game id {}", data.current_game_id);
+                                MyApp::check_if_joined(data);
+                            })
+                        } else {
+                            Ok({
+                                data.state_text = "No available games started".to_string();
+                            })
+                        }
                     });
             });
         }
